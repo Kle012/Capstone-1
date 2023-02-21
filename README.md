@@ -1,2 +1,2 @@
 # Capstone-1
-API Link: https://kitsu.docs.apiary.io/#?ref=apilist.fun
+API Link: https://kitsu.io/api/edge
