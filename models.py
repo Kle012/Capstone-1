@@ -2,6 +2,7 @@
 
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
+from datetime import datetime
 
 db = SQLAlchemy()
 bcrypt = Bcrypt()
@@ -57,3 +58,32 @@ class User(db.Model):
                 return user
             
         return False
+    
+    posts = db.relationship('Post')
+    
+    favorites = db.relationship('User', secondary='animes')
+
+class Anime(db.Model):
+    """Anime in the system."""
+    __tablename__ = 'animes'
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    title = db.Column(db.Text)
+
+class Post(db.Model):
+    """An individual post."""
+    __tablename__ = 'posts'
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    text = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow())
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
+    anime_id = db.Column(db.Integer, db.ForeignKey('animes.id', ondelete='CASCADE'), nullable=False)
+
+    user = db.relationship('User')
+
+class Favorite(db.Model):
+    """Connection of a user <-> anime."""
+    __tablename__ = 'favorites'
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), primary_key=True)
+    anime_id = db.Column(db.Integer, db.ForeignKey('animes.id', ondelete='CASCADE'), primary_key=True)
+    
