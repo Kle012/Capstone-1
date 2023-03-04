@@ -1,15 +1,15 @@
 """Flask app for Anime."""
 
-import requests
+import requests, json
 
-from flask import Flask, g, session, flash, render_template, redirect
-from models import db, connect_db, User
-from forms import RegisterForm, LoginForm
+from flask import Flask, g, session, flash, render_template, redirect, jsonify
+from models import db, connect_db, User, Anime, Post, Favorite
+from forms import RegisterForm, LoginForm, PostForm, UserEditForm
 from flask_debugtoolbar import DebugToolbarExtension
 from sqlalchemy.exc import IntegrityError
 
 CURR_USER_KEY = 'curr_user'
-API_BASE_URL = "https://kitsu.io/api/edge"
+API_BASE_URL = 'https://kitsu.io/api/edge'
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = ('oh-secret-thing')
@@ -25,29 +25,33 @@ with app.app_context():
     db.drop_all()
     db.create_all()
 
+
+##############################################################################
+# User signup/login/logout
+
+
 @app.before_request
 def add_user_to_g():
     """If we're logged out, add curr user to Flask global."""
+
     if CURR_USER_KEY in session:
         g.user = User.query.get(session[CURR_USER_KEY])
     else:
         g.user = None
 
+
 def do_login(user):
     """Log in user."""
+
     session[CURR_USER_KEY] = user.id
 
-def do_logout(user):
+
+def do_logout():
     """Logout user."""
+
     if CURR_USER_KEY in session:
         del session[CURR_USER_KEY]
 
-@app.route('/')
-def homepage():
-    res = requests.get(f'{API_BASE_URL}/trending/anime')
-    # data = res.json()
-    # title = data['titles'][0]['en']
-    # return render_template('homepage.html', anime=anime)
 
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
@@ -56,6 +60,7 @@ def signup():
     If form not valid, present form.
     If there already is a user with that username, flash message and re-present form.
     """
+
     if CURR_USER_KEY in session:
         del session[CURR_USER_KEY]
     
@@ -67,24 +72,27 @@ def signup():
                 last_name=form.last_name.data,
                 username=form.username.data,
                 password=form.password.data,
-                email=form.email.data
+                email=form.email.data,
+                image_url=form.image_url.data or User.image_url.default.arg
             )
             db.session.commit()
 
         except IntegrityError:
             flash("Username already taken", 'danger')
-            return render_template('signup.html', form=form)
+            return render_template('/users/signup.html', form=form)
         
         do_login(user)
 
         return redirect('/')
     
     else:
-        return render_template('signup.html', form=form)
+        return render_template('/users/signup.html', form=form)
+
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     """Handle user login."""
+
     form = LoginForm()
     if form.validate_on_submit():
         user = User.authenticate(form.username.data, form.password.data)
@@ -96,30 +104,181 @@ def login():
 
         flash("Invalid credentials.", 'danger')
 
-    return render_template('login.html', form=form)
+    return render_template('/users/login.html', form=form)
+
 
 @app.route('/logout')
 def logout():
     """Handle logout of user."""
+
     do_logout()
     flash('Bye bye!', 'success')
     return redirect ('/login')
 
 
+##############################################################################
+# General user routes:
+
+
+@app.route('/users/<int:user_id>')
+def user_detail(user_id):
+    """Show user's profile."""
+
+    user = User.query.get_or_404(user_id)
+    posts = (Post.query.filter(Post.user_id == user_id).order_by(Post.created_at.desc()).limit(100).all())
+
+    return render_template('/users/detail.html', user=user, posts=posts) 
+
+
+@app.route('/users/profile', methods=['GET', 'POST'])
+def edit_profile():
+    """Update profile for current user."""
+
+    # if not g.user:
+    #     flash('Access unauthorized', 'danger')
+    #     return redirect ('/')
+    
+    user = g.user
+    form = UserEditForm(obj=user)
+
+    if form.validate_on_submit():
+        if User.authenticate(form.username.data, form.password.data):
+            user.first_name = form.first_name.data
+            user.last_name = form.last_name.data
+            user.username = form.username.data
+            user.email = form.email.data
+            user.image_url = form.image_url.data
+            user.bio = form.bio.data
+            user.location = form.location.data
+
+            db.session.commit()
+            flash(f'Profile "{g.user.username}" updated.', 'success')
+
+            return redirect (f'/users/{user.id}')
+        
+        flash('Wong password! Please try again', 'danger')
+
+    return render_template('users/edit.html', form=form, user=g.user)
+
+
+@app.route('/users/delete', methods=["POST"])
+def delete_user():
+    """Delete user."""
+
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/")
+
+    do_logout()
+
+    db.session.delete(g.user)
+    db.session.commit()
+
+    return redirect("/signup")
+
+
+@app.route('/users/<int:user_id>/favorites', methods=['GET'])
+def add_like(user_id):
+    """Show user's favorited anime list."""
+
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/")
+    
+    user = User.query.get_or_404(user_id)
+    return render_template('users/favorites.html', user=user, favorites=user.favorites)
+
 
 ##############################################################################
-# Turn off all caching in Flask
-#   (useful for dev; in production, this kind of stuff is typically
-#   handled elsewhere)
-#
-# https://stackoverflow.com/questions/34066804/disabling-caching-in-flask
+# Posts routes:
 
-@app.after_request
-def add_header(req):
-    """Add non-caching headers on every request."""
 
-    req.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
-    req.headers["Pragma"] = "no-cache"
-    req.headers["Expires"] = "0"
-    req.headers['Cache-Control'] = 'public, max-age=0'
-    return req
+@app.route('/posts/new', methods=['GET', 'POST'])
+def posts_add():
+    """Add a post:
+    Show form if GET. If valid, update message and redirect to user page.
+    """
+
+    # if not g.user:
+    #     flash('Access unauthorized', 'danger')
+    #     return redirect ('/')
+    
+    
+    form = PostForm()
+
+    if form.validate_on_submit():
+        post = Post(text=form.text.data)
+        g.user.posts.append(post)
+        db.session.commit()
+
+        return redirect(f'/users/{g.user.id}')
+    
+    return render_template('posts/new.html', form=form)
+
+
+@app.route('/posts/<post_id>', methods=['GET'])
+def show_post(post_id):
+    """Show a post."""
+
+    post = Post.query.get(post_id)
+    return render_template('posts/detail.html', post=post)
+
+
+@app.route('/posts/<int:post_id>/delete', methods=["POST"])
+def posts_destroy(post_id):
+    """Delete a post."""
+
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/")
+
+    post = Post.query.get(post_id)
+    if post.user_id != g.user.id:
+        flash("Access unauthorized.", "danger")
+        return redirect("/")
+
+    db.session.delete(post)
+    db.session.commit()
+
+    return redirect(f"/users/{g.user.id}")
+
+
+##############################################################################
+# Anime routes:
+
+@app.route('/anime/<int:anime_id>')
+def anime_detail(anime_id):
+    """Get detail of an anime."""
+
+    resp = requests.get(f'{API_BASE_URL}/anime/{anime_id}')
+    list = resp.json()
+
+    response = requests.get(f'{API_BASE_URL}/anime/{anime_id}/streaming-links')
+    link = response.json()
+
+    return render_template('anime/detail.html', list=list, link=link)
+
+
+##############################################################################
+# Favorites routes:
+
+
+
+##############################################################################
+# Homepage
+
+@app.route('/')
+def homepage():
+    """Show homepage:
+    - anon users: no messages
+    - logged in: show top trending anime"""
+
+    # if g.user:
+    resp = requests.get(f'{API_BASE_URL}/trending/anime')
+    res = resp.json()
+    return render_template('homepage.html', res=res)
+    # else:
+    #     return render_template('home.html')
+
+
+
