@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="container">
+
+    <h1>#{{ list.data.id }} {{ list.data.attributes.canonicalTitle }}</h1>
+
+    <img src="{{ list.data.attributes.coverImage.tiny }}" alt="{{ list.data.attributes.canonicalTitle }}">
+
+    <div>
+        <form method="POST" action="/favorites/{{ list.data.id }}" id="anime-like">
+            <a href="/favorites/{{ list.data.id }}" role="button" class="btn btn-sm {{'btn-dark' if list.data.id in favorites else 'btn-light'}}">
+                <i class="fa fa-thumbs-up"></i>
+            </a>
+        </form>
+    </div>
+
+    <div class="container">
+        <h4>Overview</h4> 
+            <p>
+                {{ list.data.attributes.synopsis }}
+            </p>   
+
+            
+
+        <h4>Where to watch?</h4>
+        <ul>
+            {% for l in link.data%}
+                <li><a href="{{ l.attributes.url }}">{{ l.attributes.url }}</a></li>
+            {% endfor %} 
+        </ul>
+
+        <a href="/posts/new" class="btn btn-primary" role="button">
+            Go to posts
+        </a>
+
+    </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,28 @@
+{% extends 'users/info.html' %}
+
+{% block user_details %}
+  <div class="col-sm-6">
+    <ul class="list-group" id="posts">
+
+      {% for post in posts %}
+
+        <li class="list-group-item">
+          <a href="/posts/{{ post.id }}" class="post-link">
+          </a>
+
+          <a href="/users/{{ user.id }}">
+            <img src="{{ user.image_url }}" alt="user image" class="timeline-image">
+          </a>
+
+          <div class="post-area">
+            <a href="/users/{{ user.id }}">@{{ user.username }}</a>
+            <span class="text-muted">{{ post.friendly_date }}</span>
+            <p>{{ post.text }}</p>
+          </div>
+        </li>
+
+      {% endfor %}
+
+    </ul>
+  </div>
+{% endblock %}

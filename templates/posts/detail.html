@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+</div>
+    <p class="single-message">{{ post.text }}</p>
+    <span class="text-muted">{{ post.timestamp.strftime('%d %B %Y') }}</span>
+</div>
+
+{% endblock %}

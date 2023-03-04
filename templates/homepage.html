@@ -2,8 +2,56 @@
 
 {% block content %}
 
-<h1>Trending Anime</h1>
-<div>
-</div>
+<div class="row">
+    <aside class="col-md-4 col-lg-3 col-sm-12" id="home-aside">
+        <div class="card user-card">
+            <div>
+                <a href="/users/{{ g.user.id }}" class="card-link">
+                    <img src="{{ g.user.image_url }}" alt="Image for {{ g.user.username }}" class="card-image">
+                    <p>@{{ g.user.username }}</p>
+                </a>
 
+                <ul class="user-stats nav nav-pills">
+                    <li class="stat">
+                        <p class="small">Posts</p>
+                        <h4>
+                            <a href="/users/{{ g.user.id }}">{{ g.user.posts | length }}</a>
+                        </h4>
+                    </li>
+
+                    <li class="stat">
+                        <p class="small">Favorites</p>
+                        <h4>
+                            <a href="/users/{{ g.user.id }}/favorites">{{ g.user.favorites | length }}</a>
+                        </h4>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </aside>
+
+    <div class="col-lg-6 col-md-8 col-sm-12">
+        <h1>Trending Anime</h1>
+        <ul class="list-group" id="anime-list">
+            {% for anime in res.data %}
+                <li class="list-group-item">
+                    <a href="/anime/{{ anime.id }}">
+                        <img src="{{ anime.attributes.posterImage.tiny}}" alt="{{ anime.attributes.canonicalTitle}}" class="timeline-image">
+                        #{{ anime.id }} {{ anime.attributes.canonicalTitle}} 
+                    </a>
+
+                    <div>
+                        <form method="POST" action="/anime/{{ anime.id }}/favorites" id="anime-like">
+                            <button class="btn btn-sm {{'btn-dark' if anime.id in favorites else 'btn-light'}}">
+                                <a href="/anime/{{ anime.id }}/favorites">
+                                    <i class="fa fa-thumbs-up"></i>
+                                </a> 
+                            </button>
+                        </form>
+                    </div>                    
+                </li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
 {% endblock %}
