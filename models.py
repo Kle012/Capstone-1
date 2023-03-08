@@ -14,6 +14,15 @@ def connect_db(app):
     db.init_app(app)
 
 
+class Favorite(db.Model):
+    """Mapping user favorites to anime."""
+
+    __tablename__ = 'favorites'
+
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), primary_key=True)
+    anime_id = db.Column(db.Integer, db.ForeignKey('animes.id', ondelete='CASCADE'), primary_key=True)
+
+
 class User(db.Model):
     """User in the system."""
 
@@ -73,9 +82,9 @@ class User(db.Model):
             
         return False
 
-    favorites = db.relationship('Favorite', backref='user', cascade='all, delete-orphan')
+    favorites = db.relationship('Anime', secondary='favorites')
 
-    posts = db.relationship('Post', backref ='user', cascade='all, delete-orphan')
+    posts = db.relationship('Post')
 
 
 class Anime(db.Model):
@@ -100,6 +109,8 @@ class Post(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
     # anime_id = db.Column(db.Integer, db.ForeignKey('animes.id', ondelete='CASCADE'), nullable=False)
 
+    user = db.relationship('User')
+
     @property
     def friendly_date(self):
         """Return a friendly date for user."""
@@ -107,11 +118,4 @@ class Post(db.Model):
         return self.created_at.strftime("%a %b %-d %Y, %-I:%M %p")
     
 
-class Favorite(db.Model):
-    """Mapping user favorites to anime."""
 
-    __tablename__ = 'favorites'
-
-    id = db.Column(db.Integer, primary_key = True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'))
-    anime_id = db.Column(db.Integer, db.ForeignKey('animes.id', ondelete='CASCADE'), unique=True)
