@@ -152,7 +152,7 @@ body.error-404 {
   
   /* ===================== User profile */
   
-  .join-message {
+  .join-post {
     margin-top: 100px;
   }
   
@@ -185,12 +185,12 @@ body.error-404 {
     margin-top: 2px;
   }
   
-  .message-area,
+  .post-area,
   .timeline-image {
     display: inline-block;
   }
   
-  .message-area {
+  .post-area {
     margin-left: 10px;
   }
   
@@ -253,12 +253,12 @@ body.error-404 {
     padding-top: 3px;
   }
   
-  #messages {
+  #posts {
     position: relative;
   }
   
-  #messages .message-link {
-    position: absolute;
+  #posts .post-link {
+    /* position: absolute; */
     top: 0;
     bottom: 0;
     left: 0;
@@ -266,18 +266,18 @@ body.error-404 {
     z-index: 1;
   }
   
-  #messages .list-group-item a:not(.message-link) {
+  #posts .list-group-item a:not(.post-link) {
     position: relative;
     z-index: 2;
   }
   
-  #messages .list-group-item {
+  #posts .list-group-item {
     display: flex;
     align-items: flex-start;
     padding: 7px 20px 12px;
   }
   
-  #messages:not(.no-hover) .list-group-item:hover {
+  #posts:not(.no-hover) .list-group-item:hover {
     background-color: #e6ecf0;
   }
   
@@ -379,6 +379,8 @@ body.error-404 {
   
   p.card-bio {
     margin: 2em 10px 0;
+    padding-top: 50px;
+    
   }
   
   /* ============================ Signed out home */
@@ -397,7 +399,7 @@ body.error-404 {
     background-image: url("/static/images/signed-out-home.jpg");
     background-size: cover;
     background-position: center center;
-    color: #fff;
+    color: black;
     text-align: center;
     padding: 1rem;
     text-shadow: 0 0 8px #66757f;
@@ -480,7 +482,7 @@ body.error-404 {
     width: 48%;
   }
   
-  /* =========================== Message Show page */
+  /* =========================== Post Show page */
   
   .bg {
     position: absolute;
@@ -491,29 +493,29 @@ body.error-404 {
     background-color: #62676c;
   }
   
-  #messages.no-hover .message-area {
+  #posts.no-hover .post-area {
     width: 100%;
   }
   
-  #messages.no-hover .message-heading {
+  #posts.no-hover .post-heading {
     display: flex;
     justify-content: space-between;
     height: 47px;
     margin-top: 3px;
   }
   
-  #messages.no-hover .message-heading .btn {
+  #posts.no-hover .post-heading .btn {
     min-width: 105px;
   }
   
-  #messages-form {
+  #posts-form {
     position: absolute;
     top: 4px;
     right: 4px;
     z-index: 1;
   }
   
-  .single-message {
+  .single-post {
     font-size: 27px;
     line-height: 32px;
     letter-spacing: 0.01em;
