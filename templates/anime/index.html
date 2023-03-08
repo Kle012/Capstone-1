@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+{% block content %}
+    {% if list|length == 0 %}
+        <h3>Sorry, no anime found</h3>
+    {% else %}
+    <div class="row justify-content-end">
+        <div class="col-sm-9">
+            <div class="row">
+
+                {% for anime in list.data %}
+
+                    <div class="col-lg-4 col-md-6 col-12">
+                        <div class="card user-card">
+                            <div class="card-inner">
+                                <div class="image-wrapper">
+                                    <img src="{{ anime.attributes.posterImage.tiny }}" alt="" class="card-hero">
+                                </div>
+                                <div class="card-contents">
+                                    <a href="/anime/{{ anime.id }}" class="card-link">
+                                        <!-- <img src="{{ anime.attributes.posterImage.tiny }}" alt="Image for {{ anime.attributes.canonicalTitle }}" class="card-image"> -->
+                                        <p>{{ anime.attributes.canonicalTitle }}</p>
+                                    </a>
+                                </div>
+
+                                <p class="card-bio">
+                                    {% if anime.attributes.ageRatingGuide %}
+                                        {{ anime.attributes.ageRatingGuide }}
+                                    {% else %}
+                                        No Age Rating Guide
+                                    {% endif %}
+                                    </p>
+                            </div>
+                        </div>
+                    </div>
+
+                {% endfor %}
+
+            </div>
+        </div>
+    </div>
+    {% endif %}
+{% endblock %}

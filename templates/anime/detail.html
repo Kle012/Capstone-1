@@ -4,7 +4,7 @@
 
 <div class="container">
 
-    <h1>#{{ list.data.id }} {{ list.data.attributes.canonicalTitle }}</h1>
+    <h1>{{ list.data.attributes.canonicalTitle }}</h1>
 
     <img src="{{ list.data.attributes.coverImage.tiny }}" alt="{{ list.data.attributes.canonicalTitle }}">
 
@@ -26,9 +26,15 @@
 
         <h4>Where to watch?</h4>
         <ul>
-            {% for l in link.data%}
-                <li><a href="{{ l.attributes.url }}">{{ l.attributes.url }}</a></li>
-            {% endfor %} 
+            {% if link.data == [] %}
+                <p>No Sites Found</p>
+            {% else %}
+                {% for l in link.data%}
+                    <li><a href="{{ l.attributes.url }}">{{ l.attributes.url }}</a></li>
+                {% endfor %}  
+
+            {% endif %}
+             
         </ul>
 
         <a href="/posts/new" class="btn btn-primary" role="button">

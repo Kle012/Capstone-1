@@ -7,18 +7,18 @@
       {% for post in posts %}
 
         <li class="list-group-item">
-          <a href="/posts/{{ post.id }}" class="post-link">
-          </a>
+          <a href="/posts/{{ post.id }}">
 
-          <a href="/users/{{ user.id }}">
-            <img src="{{ user.image_url }}" alt="user image" class="timeline-image">
-          </a>
+            <a href="/posts/{{ post.id }}">
+              <img src="{{ user.image_url }}" alt="user image" class="timeline-image">
+            </a>
 
-          <div class="post-area">
-            <a href="/users/{{ user.id }}">@{{ user.username }}</a>
-            <span class="text-muted">{{ post.friendly_date }}</span>
-            <p>{{ post.text }}</p>
-          </div>
+            <div class="post-area">
+              <a href="/posts/{{ post.id }}" class="post-link">@{{ user.username }}</a>
+              <span class="text-muted">{{ post.friendly_date }}</span>
+              <p>{{ post.text }}</p>
+            </div>
+          </a>
         </li>
 
       {% endfor %}

@@ -2,9 +2,35 @@
 
 {% block content %}
 
-</div>
-    <p class="single-message">{{ post.text }}</p>
-    <span class="text-muted">{{ post.timestamp.strftime('%d %B %Y') }}</span>
-</div>
+    <div class="bg"></div>
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <ul class="list-group no-hover" id="posts">
+                    <li class="list-group-item">
+                        <a href="{{ url_for('user_detail', user_id=post.user.id) }}">
+                            <img src="{{ post.user.image_url }}" alt="" class="timeline-image">
+                        </a>
+
+                        <div class="post-area">
+                            <div class="post-heading">
+                                <a href="/users/{{ post.user.id }}">
+                                    @{{ post.user.username }}
+                                </a>
+                                {% if g.user %}
+                                    {% if g.user.id == post.user.id %}
+                                        <form method="POST" action="/posts/{{ post.id }}/delete">
+                                            <button class="btn btn-outline-danger">Delete</button>
+                                        </form>
+                                    {% endif %}
+                                {% endif %}
+                            </div>
+                            <p class="single-post">{{ post.text }}</p>
+                            <span class="text-muted">{{ post.friendly_date }}</span>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
 
 {% endblock %}
