@@ -2,7 +2,7 @@
 
 import requests, json
 
-from flask import Flask, g, session, flash, render_template, redirect, jsonify
+from flask import Flask, g, session, flash, render_template, redirect, request
 from models import db, connect_db, User, Anime, Post, Favorite
 from forms import RegisterForm, LoginForm, PostForm, UserEditForm
 from flask_debugtoolbar import DebugToolbarExtension
@@ -202,10 +202,9 @@ def posts_add():
     # if not g.user:
     #     flash('Access unauthorized', 'danger')
     #     return redirect ('/')
-    
-    
-    form = PostForm()
 
+    form = PostForm()
+    
     if form.validate_on_submit():
         post = Post(text=form.text.data)
         g.user.posts.append(post)
@@ -246,6 +245,24 @@ def posts_destroy(post_id):
 ##############################################################################
 # Anime routes:
 
+@app.route('/anime')
+def list_anime():
+    """Page with listing of anime.
+    Can take a 'q' param in querystring to search by that anime name.
+    """
+
+    search = request.args.get('q')
+
+    if not search:
+        resp = requests.get(f'{API_BASE_URL}/anime')
+        list = resp.json()
+    else:
+        resp = requests.get(f'{API_BASE_URL}/anime?filter[text]=(%{search}%)')
+        list = resp.json()
+    
+    return render_template ('anime/index.html', list=list)
+
+
 @app.route('/anime/<int:anime_id>')
 def anime_detail(anime_id):
     """Get detail of an anime."""
@@ -262,6 +279,17 @@ def anime_detail(anime_id):
 ##############################################################################
 # Favorites routes:
 
+@app.route('/anime/<int:anime_id>/favorites', methods=['POST'])
+def toggle_favorite(anime_id):
+    """Toggle the favorite button for an anime."""
+
+    # if not g.user:
+    #     flash('Access unauthorized', 'danger')
+    #     return redirect ('/')
+
+    resp = requests.get(f'{API_BASE_URL}/anime/{anime_id}')
+    list = resp.json()
+    liked_anime = list.data['id']      
 
 
 ##############################################################################
@@ -273,12 +301,12 @@ def homepage():
     - anon users: no messages
     - logged in: show top trending anime"""
 
-    # if g.user:
-    resp = requests.get(f'{API_BASE_URL}/trending/anime')
-    res = resp.json()
-    return render_template('homepage.html', res=res)
-    # else:
-    #     return render_template('home.html')
+    if g.user:
+        resp = requests.get(f'{API_BASE_URL}/trending/anime')
+        res = resp.json()
+        return render_template('homepage.html', res=res)
+    else:
+        return render_template('home.html')
 
 
 
