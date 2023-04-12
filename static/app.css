@@ -45,6 +45,13 @@ body.error-404 {
     align-items: center;
 }
 
+.navbar-brand > img {
+  display: inline-block;
+  margin-bottom: 2px;
+  margin-right: 5px;
+  width: 20px;
+  border-radius: 2px;
+}
   
 .nav > li > a > img {
     width: 32px;
@@ -98,7 +105,7 @@ nav form.navbar-form {
   
   /* ===================== User profile */
   
-  .join-message {
+  .join-post {
     margin-top: 100px;
   }
   
@@ -124,6 +131,13 @@ nav form.navbar-form {
     box-shadow: 0 1px 1px rgba(136, 153, 166, 0.15);
   }
   
+  .timeline-image {
+    border-radius: 48px;
+    height: 48px;
+    width: 48px;
+    margin-top: 2px;
+  }
+
   .post-area,
   .timeline-image {
     display: inline-block;
