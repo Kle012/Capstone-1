@@ -34,21 +34,31 @@
         <h1>Trending Anime</h1>
         <ul class="list-group" id="anime-list">
             {% for anime in res.data %}
-                <li class="list-group-item">
-                    <a href="/anime/{{ anime.id }}">
-                        <img src="{{ anime.attributes.posterImage.tiny}}" alt="{{ anime.attributes.canonicalTitle}}" class="timeline-image">
-                        {{ anime.attributes.canonicalTitle}} 
-                    </a>
+                <li class="card-link" id="{{ anime.id }}">
+                    <div class="card-inner">
+                        <div class="image-wrapper">
+                            <a href="/anime/{{ anime.id }}" class="card-link">
+                                <img src="{{ anime.attributes.posterImage.large}}" alt="{{ anime.attributes.canonicalTitle}}" class="card-hero"> 
+                            </a>  
+                        </div>
 
-                    <div>
-                        <form method="POST" action="/anime/{{ anime.id }}/favorites" id="anime-like">
-                            <button class="btn btn-sm {{'btn-dark' if anime.id in favorites else 'btn-light'}}">
-                                <a href="/anime/{{ anime.id }}/favorites">
-                                    <i class="fa fa-thumbs-up"></i>
-                                </a> 
-                            </button>
-                        </form>
-                    </div>                    
+                        <div class="card-contents">
+                            <p>
+                                {{ anime.attributes.canonicalTitle}}
+                            </p>
+
+                            <div>
+                                <form method="POST" action="/anime/{{ anime.id }}/favorites" id="anime-like">
+                                    <button class="btn btn-sm {{ 'btn-dark' if anime.id in favorites else 'btn-light'}} ">
+                                        <a href="/anime/{{ anime.id }}/favorites">
+                                            <i class="fa fa-thumbs-up"></i>
+                                        </a> 
+                                    </button>
+                                </form>
+                            </div>          
+
+                        </div>
+                    </div>          
                 </li>
             {% endfor %}
         </ul>

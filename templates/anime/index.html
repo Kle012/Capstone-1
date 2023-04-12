@@ -13,11 +13,10 @@
                         <div class="card user-card">
                             <div class="card-inner">
                                 <div class="image-wrapper">
-                                    <img src="{{ anime.attributes.posterImage.tiny }}" alt="" class="card-hero">
+                                    <img src="{{ anime.attributes.posterImage.large }}" alt="{{ anime.attributes.canonicalTitle}} " class="card-hero">
                                 </div>
                                 <div class="card-contents">
                                     <a href="/anime/{{ anime.id }}" class="card-link">
-                                        <!-- <img src="{{ anime.attributes.posterImage.tiny }}" alt="Image for {{ anime.attributes.canonicalTitle }}" class="card-image"> -->
                                         <p>{{ anime.attributes.canonicalTitle }}</p>
                                     </a>
                                 </div>

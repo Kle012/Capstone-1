@@ -4,18 +4,22 @@
 
 <div class="col-lg-6 col-md-8 col-sm-12">
     <div class="row">
-        <ul class="list-group" id="anime">
+        <ul class="list-group" id="anime-favorite">
             {% for fav in favorites %}
                 <li class="list-group-item">
-                    <a href="/favorites/{{ fav.id  }}"   class="message-link"></a>
-                    <a href="/users/{{ fav.user.id }}">
-                        <img src="{{ fav.user.image_url }}" alt=""  class="timeline-image">
+                    <a href="/anime/{{ fav.anime_id }}">
+                        <img src="{{ fav.anime.details.data.attributes.posterImage.tiny }}" alt="" class="timeline-change">
                     </a>
+                    <div class="message-area">
+                        <a href="/anime/{{ fav.anime_id }}">
+                            {{ fav.anime.details.data.attributes.canonicalTitle }}
+                        </a>
+                    </div>
   
                 {% if user.id == g.user.id %}
-                    <form action="/anime/{{ fav.id }}/favorites" method="POST">
+                    <form action="/anime/{{ fav.anime_id }}/favorites" method="POST">
                         <button class="btn btn-sm {{'btn-dark'}}">
-                            <a href="/anime/{{ fav.id }}/favorites">
+                            <a href="/anime/{{ fav.anime_id }}/favorites">
                                 <i class="fa fa-thumbs-up"></i>
                             </a> 
                         </button>
