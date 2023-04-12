@@ -1,10 +1,14 @@
 """Models for Anime app."""
 
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.dialects.postgresql import JSON
 from flask_bcrypt import Bcrypt
 from datetime import datetime
+from sqlalchemy.schema import DropTable
+from sqlalchemy.ext.compiler import compiles
 
 db = SQLAlchemy()
+db = SQLAlchemy(session_options={"autoflush": False})
 bcrypt = Bcrypt()
 
 
@@ -13,14 +17,23 @@ def connect_db(app):
     db.app = app
     db.init_app(app)
 
+@compiles(DropTable, "postgresql")
+def _compile_drop_table(element, compiler, **kwargs):
+    return compiler.visit_drop_table(element) + " CASCADE"
+
+
 
 class Favorite(db.Model):
     """Mapping user favorites to anime."""
 
     __tablename__ = 'favorites'
 
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), primary_key=True)
-    anime_id = db.Column(db.Integer, db.ForeignKey('animes.id', ondelete='CASCADE'), primary_key=True)
+    
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete="CASCADE"), primary_key=True)
+    anime_id = db.Column(db.Integer, db.ForeignKey('animes.id', ondelete="CASCADE"), primary_key=True)
+
+    def __repr__(self):
+        return f'<{self.anime_id}>'
 
 
 class User(db.Model):
@@ -38,10 +51,8 @@ class User(db.Model):
     bio = db.Column(db.Text)
     location = db.Column(db.Text)
 
-    posts = db.relationship('Post', backref = 'user', cascade="all, delete-orphan")
-
     def __repr__(self):
-        return f'<User #{self.id}: {self.username}, {self.email}>'
+        return f'<User #{self.id}: {self.username}>'
     
     @property
     def full_name(self):
@@ -82,9 +93,11 @@ class User(db.Model):
             
         return False
 
-    favorites = db.relationship('Anime', secondary='favorites')
+    favorites = db.relationship('Favorite', backref='user', cascade="all, delete-orphan")
 
-    posts = db.relationship('Post')
+    animes = db.relationship('Anime', secondary='favorites', backref='users')
+
+    posts = db.relationship('Post', backref = 'user', cascade="all, delete-orphan")
 
 
 class Anime(db.Model):
@@ -92,10 +105,12 @@ class Anime(db.Model):
 
     __tablename__ = 'animes'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    title = db.Column(db.Text)
+    details = db.Column(JSON)
 
     def __repr__(self):
-        return f'#{self.id}: {self.title}'
+        return f'<Anime #{self.id}>'
+    
+    favorites = db.relationship('Favorite', backref='anime', cascade="all, delete-orphan")
 
 
 class Post(db.Model):
@@ -108,8 +123,6 @@ class Post(db.Model):
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow())
     user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
     # anime_id = db.Column(db.Integer, db.ForeignKey('animes.id', ondelete='CASCADE'), nullable=False)
-
-    user = db.relationship('User')
 
     @property
     def friendly_date(self):
