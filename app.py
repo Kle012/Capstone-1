@@ -1,6 +1,6 @@
 """Flask app for Anime."""
 
-import requests, json
+import requests
 
 from flask import Flask, g, session, flash, render_template, redirect, request
 from models import db, connect_db, User, Anime, Post, Favorite
@@ -78,7 +78,7 @@ def signup():
             db.session.commit()
 
         except IntegrityError:
-            flash("Username already taken", 'danger')
+            flash("Username already taken!", 'danger')
             return render_template('/users/signup.html', form=form)
         
         do_login(user)
@@ -134,9 +134,9 @@ def user_detail(user_id):
 def edit_profile():
     """Update profile for current user."""
 
-    # if not g.user:
-    #     flash('Access unauthorized', 'danger')
-    #     return redirect ('/')
+    if not g.user:
+        flash('Access unauthorized!', 'danger')
+        return redirect ('/')
     
     user = g.user
     form = UserEditForm(obj=user)
@@ -166,7 +166,7 @@ def delete_user():
     """Delete user."""
 
     if not g.user:
-        flash("Access unauthorized.", "danger")
+        flash("Access unauthorized!", "danger")
         return redirect("/")
 
     do_logout()
@@ -178,14 +178,15 @@ def delete_user():
 
 
 @app.route('/users/<int:user_id>/favorites', methods=['GET'])
-def add_like(user_id):
+def show_like(user_id):
     """Show user's favorited anime list."""
 
     if not g.user:
-        flash("Access unauthorized.", "danger")
+        flash("Access unauthorized!", "danger")
         return redirect("/")
     
     user = User.query.get_or_404(user_id)
+    
     return render_template('users/favorites.html', user=user, favorites=user.favorites)
 
 
@@ -199,9 +200,9 @@ def posts_add():
     Show form if GET. If valid, update message and redirect to user page.
     """
 
-    # if not g.user:
-    #     flash('Access unauthorized', 'danger')
-    #     return redirect ('/')
+    if not g.user:
+        flash('Access unauthorized!', 'danger')
+        return redirect ('/')
 
     form = PostForm()
     
@@ -224,16 +225,16 @@ def show_post(post_id):
 
 
 @app.route('/posts/<int:post_id>/delete', methods=["POST"])
-def posts_destroy(post_id):
+def posts_delete(post_id):
     """Delete a post."""
 
     if not g.user:
-        flash("Access unauthorized.", "danger")
+        flash("Access unauthorized!", "danger")
         return redirect("/")
 
     post = Post.query.get(post_id)
     if post.user_id != g.user.id:
-        flash("Access unauthorized.", "danger")
+        flash("Access unauthorized!", "danger")
         return redirect("/")
 
     db.session.delete(post)
@@ -254,7 +255,7 @@ def list_anime():
     search = request.args.get('q')
 
     if not search:
-        resp = requests.get(f'{API_BASE_URL}/anime')
+        resp = requests.get(f'{API_BASE_URL}/anime?page[limit]=20')
         list = resp.json()
     else:
         resp = requests.get(f'{API_BASE_URL}/anime?filter[text]=(%{search}%)')
@@ -281,15 +282,45 @@ def anime_detail(anime_id):
 
 @app.route('/anime/<int:anime_id>/favorites', methods=['POST'])
 def toggle_favorite(anime_id):
-    """Toggle the favorite button for an anime."""
+    """Toggle favorite button."""
 
-    # if not g.user:
-    #     flash('Access unauthorized', 'danger')
-    #     return redirect ('/')
+    if not g.user:
+        flash('Access unauthorized!', 'danger')
+        return redirect ('/')
+    
+    fav = Favorite.query.filter_by(user_id=g.user.id, anime_id=anime_id).first()
 
     resp = requests.get(f'{API_BASE_URL}/anime/{anime_id}')
     list = resp.json()
-    liked_anime = list.data['id']      
+
+    user_fav = g.user.favorites
+
+    if not fav:
+        if not Anime.query.get(anime_id):
+            anime = Anime(id=anime_id, details=list)
+            db.session.add(anime)
+        else:
+            anime = Anime.query.get(anime_id)
+
+        liked_anime = Favorite(user_id=g.user.id, anime_id=anime.id)
+        db.session.add(liked_anime)
+        user_fav.append(liked_anime)
+        details = anime.details
+        name = details['data']['attributes']['canonicalTitle']
+        flash (f'Added { name } to Favorites.', 'success')
+    
+    else:
+        anime = Anime.query.get(anime_id)
+        details = anime.details
+        name = details['data']['attributes']['canonicalTitle']
+        user_fav.remove(fav)
+        db.session.delete(fav)
+        
+        flash (f'Removed { name } from Favorites.', 'success')
+    
+    db.session.commit()
+
+    return redirect ('/')
 
 
 ##############################################################################
